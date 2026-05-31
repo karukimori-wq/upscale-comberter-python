@@ -6,6 +6,8 @@ import numpy as np
 import cv2
 from PIL import Image, ImageEnhance, ImageFilter
 import io
+from mangum import Mangum
+
 
 app = FastAPI(title="StampCut Sharpen API")
 
@@ -160,3 +162,4 @@ def sharpen(req: SharpenRequest):
         width=w,
         height=h,
     )
+handler = Mangum(app)
