@@ -1084,10 +1084,19 @@ async function runProcess() {
     c.width = sw; c.height = sh;
     c.getContext('2d').drawImage(sourceImg, sx, sy, sw, sh, 0, 0, sw, sh);
 
-    // Sharpen pipeline
+    // ── 正しい処理順序 ──
+    // 1. 背景除去（元サイズで精度高く）
+    // 2. 鮮明化（縮小前にかける）
+    // 3. リサイズ（最後に縮小）
+
+    // Step 1: 背景除去
+    if (doTransparent) {
+      c = removeBackground(c, threshold);
+    }
+
+    // Step 2: 鮮明化
     const usePythonApi = document.getElementById('chkPythonApi').checked;
     if (usePythonApi) {
-      // Python API 優先: 失敗時はブラウザ処理にフォールバック
       const apiResult = await sharpenWithPythonApi(c);
       if (apiResult) {
         c = apiResult;
@@ -1101,12 +1110,7 @@ async function runProcess() {
       c = await sharpenCanvas(c, scale, sharp, edge, lineDark, preBlur);
     }
 
-    // Remove background
-    if (doTransparent) {
-      c = removeBackground(c, threshold);
-    }
-
-    // Resize to LINE stamp size
+    // Step 3: リサイズ（最後）
     if (doLineStamp) {
       c = resizeToStamp(c, 370, 320);
     }
